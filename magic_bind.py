@@ -82,7 +82,7 @@ class MagicBind(object):
 
         callable_method = super(MagicBind, self).__getattribute__('__call__')
 
-        if isinstance(original_attribute, Meth):
+        if isinstance(original_attribute, (Meth, Func)):
             self._clble = original_attribute
             return callable_method
         else:
@@ -106,7 +106,7 @@ def merge_args(callable, overwriting, args, kwargs):
 
     begin_index = 0 if isinstance(callable, Func) else 1
 
-    for argnum, argname in enumerate(getargspec(callable)[0][begin_index:]):
+    for argname in getargspec(callable)[0][begin_index:]:
         if argname in overwriting:
             vargs.append(overwriting[argname])
         elif len(args) > 0:
@@ -138,3 +138,28 @@ if __name__ == '__main__':
     import doctest
 
     doctest.testmod()
+
+# class Test(object):
+#     a = 100
+#     def no_args(self):
+#         return self
+#     def two_positional(self, x, y):
+#         return x, y
+#     def three_positional(self, x, y, z):
+#         return x, y, z
+#     def defaults(self, x=1, y=2, z=3):
+#         return x, y, z
+#     def args_kwargs(self, x, y, *args, **kwargs):
+#         return x, y, args, list(sorted(kwargs.items()))
+#     def only_args_kwargs(self, *args, **kwargs):
+#         return args, list(sorted(kwargs.items()))
+#     @staticmethod
+#     def static(x, y, z):
+#         return x, y, z
+#     def __call__(self, x, y, z=3):
+#         return x, y, z
+#
+# t=Test()
+#
+# mb = MagicBind(t, x=10)
+# mb.static(20,30)
