@@ -98,9 +98,8 @@ class MagicBind(object):
 
 
 def merge_args(callable_, overwriting, args):
-    """Return a tuple (vargs, kw), where `vargs` represents a list of values,
-        and kwargs a dictionary, to be unpacked when calling the callable
-        with the provided argspec
+    """Return `vargs` where `vargs` represents a list of values, to be unpacked
+        when calling the `callable_`
     """
     vargs = []
     args = list(args)
@@ -113,9 +112,7 @@ def merge_args(callable_, overwriting, args):
         elif len(args) > 0:
             vargs.append(args.pop(0))
 
-    if args:
-        vargs.extend(args)
-
+    vargs.extend(args)
     return vargs
 
 if __name__ == '__main__':
