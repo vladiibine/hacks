@@ -84,19 +84,20 @@ class MagicBind(object):
 
         if isinstance(original_attribute, (Meth, Func)):
             self._clble = original_attribute
-            return callable_method
+        elif callable(original_attribute):
+            self._clble = original_attribute.__call__
         else:
             return original_attribute
+        return callable_method
 
     def __call__(self, *args, **kwargs):
         overwrite_dict = (super(MagicBind, self).__getattribute__('_kwargs'))
         original_callable = super(MagicBind, self).__getattribute__('_clble')
-        ok_args, ok_kwargs = merge_args(original_callable, overwrite_dict,
-                                        args, kwargs)
-        return original_callable(*ok_args, **ok_kwargs)
+        ok_args = merge_args(original_callable, overwrite_dict, args)
+        return original_callable(*ok_args, **kwargs)
 
 
-def merge_args(callable, overwriting, args, kwargs):
+def merge_args(callable_, overwriting, args):
     """Return a tuple (vargs, kw), where `vargs` represents a list of values,
         and kwargs a dictionary, to be unpacked when calling the callable
         with the provided argspec
@@ -104,9 +105,9 @@ def merge_args(callable, overwriting, args, kwargs):
     vargs = []
     args = list(args)
 
-    begin_index = 0 if isinstance(callable, Func) else 1
+    begin_index = 0 if isinstance(callable_, Func) else 1
 
-    for argname in getargspec(callable)[0][begin_index:]:
+    for argname in getargspec(callable_)[0][begin_index:]:
         if argname in overwriting:
             vargs.append(overwriting[argname])
         elif len(args) > 0:
@@ -115,51 +116,9 @@ def merge_args(callable, overwriting, args, kwargs):
     if args:
         vargs.extend(args)
 
-    return vargs, kwargs
+    return vargs
 
-
-class Asdf(object):
-    def asdf(self, x, y, z, *args, **kwargs):
-        return "asdf", x, y, z
-
-    @classmethod
-    def cls_asdf(cls, x, y, z, t, *args, **kwargs):
-        return "classmethod", x, y, z, t, args, kwargs
-
-    @staticmethod
-    def static_asdf(x, y, z, t, *args, **kwargs):
-        return "lol static", x, y, z, t, args, kwargs
-
-
-# a = Asdf()
-# m1 = MagicBind(a, x=9)
-# print m1.asdf(6, z=8)
 if __name__ == '__main__':
     import doctest
 
     doctest.testmod()
-
-# class Test(object):
-#     a = 100
-#     def no_args(self):
-#         return self
-#     def two_positional(self, x, y):
-#         return x, y
-#     def three_positional(self, x, y, z):
-#         return x, y, z
-#     def defaults(self, x=1, y=2, z=3):
-#         return x, y, z
-#     def args_kwargs(self, x, y, *args, **kwargs):
-#         return x, y, args, list(sorted(kwargs.items()))
-#     def only_args_kwargs(self, *args, **kwargs):
-#         return args, list(sorted(kwargs.items()))
-#     @staticmethod
-#     def static(x, y, z):
-#         return x, y, z
-#     def __call__(self, x, y, z=3):
-#         return x, y, z
-#
-# t=Test()
-#
-# mb = MagicBind(t, x=10)
-# mb.static(20,30)
