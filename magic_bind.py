@@ -1,5 +1,5 @@
-import types
-import inspect
+from types import FunctionType as Func, MethodType as Meth
+from inspect import getargspec
 
 
 class MagicBind(object):
@@ -69,8 +69,6 @@ class MagicBind(object):
     """
 
     def __init__(self, obj, **kwargs):
-        """
-        """
         self._obj = obj
         self._kwargs = kwargs
 
@@ -84,7 +82,7 @@ class MagicBind(object):
 
         callable_method = super(MagicBind, self).__getattribute__('__call__')
 
-        if isinstance(original_attribute, types.MethodType):
+        if isinstance(original_attribute, Meth):
             self._clble = original_attribute
             return callable_method
         else:
@@ -92,30 +90,30 @@ class MagicBind(object):
 
     def __call__(self, *args, **kwargs):
         overwrite_dict = (super(MagicBind, self).__getattribute__('_kwargs'))
-
-        arguments_dict = dict(overwrite_dict)
-        arguments_dict.update(kwargs)
-
         original_callable = super(MagicBind, self).__getattribute__('_clble')
-        ok_args, ok_kwargs = merge_args(original_callable, overwrite_dict, args, )
-        return original_callable(*args, **arguments_dict)
+        ok_args, ok_kwargs = merge_args(original_callable, overwrite_dict,
+                                        args, kwargs)
+        return original_callable(*ok_args, **ok_kwargs)
 
 
-def merge_args(argspec, overwriting, args, kwargs):
+def merge_args(callable, overwriting, args, kwargs):
     """Return a tuple (vargs, kw), where `vargs` represents a list of values,
         and kwargs a dictionary, to be unpacked when calling the callable
         with the provided argspec
     """
     vargs = []
-    kw = {}
+    args = list(args)
 
-    for argnum, argname in enumerate(argspec[0]):
+    begin_index = 0 if isinstance(callable, Func) else 1
+
+    for argnum, argname in enumerate(getargspec(callable)[0][begin_index:]):
         if argname in overwriting:
             vargs.append(overwriting[argname])
-        else:
+        elif len(args) > 0:
             vargs.append(args.pop())
 
-    pass
+
+    return vargs, kwargs
 
 
 class Asdf(object):
@@ -131,10 +129,10 @@ class Asdf(object):
         return "lol static", x, y, z, t, args, kwargs
 
 
-a = Asdf()
-m1 = MagicBind(a, x=9)
-m1.asdf(6, z=8)
-# if __name__ == '__main__':
-#     import doctest
-#
-#     doctest.testmod()
+# a = Asdf()
+# m1 = MagicBind(a, x=9)
+# print m1.asdf(6, z=8)
+if __name__ == '__main__':
+    import doctest
+
+    doctest.testmod()
