@@ -102,7 +102,7 @@ def merge_args(callable, overwriting, args, kwargs):
         with the provided argspec
     """
     vargs = []
-    args = list(reversed(args))
+    args = list(args)
 
     begin_index = 0 if isinstance(callable, Func) else 1
 
@@ -110,8 +110,10 @@ def merge_args(callable, overwriting, args, kwargs):
         if argname in overwriting:
             vargs.append(overwriting[argname])
         elif len(args) > 0:
-            vargs.append(args.pop())
+            vargs.append(args.pop(0))
 
+    if args:
+        vargs.extend(args)
 
     return vargs, kwargs
 
