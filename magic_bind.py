@@ -102,7 +102,7 @@ def merge_args(callable, overwriting, args, kwargs):
         with the provided argspec
     """
     vargs = []
-    args = list(args)
+    args = list(reversed(args))
 
     begin_index = 0 if isinstance(callable, Func) else 1
 
