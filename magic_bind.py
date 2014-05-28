@@ -21,6 +21,9 @@ class MagicBind(object):
     ...         return x, y
     ...     def three_positional(self, x, y, z):
     ...         return x, y, z
+    ...     def six_positional_vargs_kwargs(self, x, y, z, a=98, b=43, d=-112,
+    ...                                         *owkargs, **ownkwargs):
+    ...         return x,y,z,a,b,d,owkargs, ownkwargs
     ...     def defaults(self, x=1, y=2, z=3):
     ...         return x, y, z
     ...     def args_kwargs(self, x, y, *args, **kwargs):
@@ -34,43 +37,45 @@ class MagicBind(object):
     ...         return x, y, z
 
     >>> t = Test()
-    >>> mb = MagicBind(t, x=10)
-    >>> mb.a
-    100
-    >>> mb.no_args() is t
-    True
-    >>> mb.two_positional(20)
-    (10, 20)
-    >>> mb.three_positional(20, 30)
-    (10, 20, 30)
-    >>> mb.defaults(20)
-    (10, 20, 3)
-    >>> mb.defaults()
-    (10, 2, 3)
-    >>> mb.defaults(y=20)
-    (10, 20, 3)
-    >>> mb.args_kwargs(20, 30, 40, z=50, w=60)
-    (10, 20, (30, 40), [('w', 60), ('z', 50)])
-    >>> mb.only_args_kwargs()
-    ((), [])
-    >>> mb.args_kwargs(20, 30, x=50, w=60) # doctest:+IGNORE_EXCEPTION_DETAIL
-    Traceback (most recent call last):
-    TypeError:
-    >>> mb.only_args_kwargs(20, 30, 40, z=50, w=60)
-    ((20, 30, 40), [('w', 60), ('z', 50)])
-    >>> mb.only_args_kwargs(10, 20, x=30, y=40)
-    ((10, 20), [('x', 30), ('y', 40)])
-    >>> mb.static(20, 30)
-    (10, 20, 30)
-    >>> t.clble = t
-    >>> mb.clble(20)
-    (10, 20, 3)
-
+    >>> mb2 = MagicBind(t, 1, 2, 3, x=221, z=5466, b=11111, a='first',d='second', third='thirsd')
+    >>> mb2.six_positional_vargs_kwargs(y=17)
+    (221, 17, 5466, 'first', 111111, 'second', (1, 2, 3), {'third': 'thirsd'})
     """
-
-    def __init__(self, obj, **kwargs):
+    # >>> mb = MagicBind(t, x=10)
+    # >>> mb.a
+    # 100
+    # >>> mb.no_args() is t
+    # True
+    # >>> mb.two_positional(20)
+    # (10, 20)
+    # >>> mb.three_positional(20, 30)
+    # (10, 20, 30)
+    # >>> mb.defaults(20)
+    # (10, 20, 3)
+    # >>> mb.defaults()
+    # (10, 2, 3)
+    # >>> mb.defaults(y=20)
+    # (10, 20, 3)
+    # >>> mb.args_kwargs(20, 30, 40, z=50, w=60)
+    # (10, 20, (30, 40), [('w', 60), ('z', 50)])
+    # >>> mb.only_args_kwargs()
+    # ((), [])
+    # >>> mb.args_kwargs(20, 30, x=50, w=60) # doctest:+IGNORE_EXCEPTION_DETAIL
+    # Traceback (most recent call last):
+    # TypeError:
+    # >>> mb.only_args_kwargs(20, 30, 40, z=50, w=60)
+    # ((20, 30, 40), [('w', 60), ('z', 50)])
+    # >>> mb.only_args_kwargs(10, 20, x=30, y=40)
+    # ((10, 20), [('x', 30), ('y', 40)])
+    # >>> mb.static(20, 30)
+    # (10, 20, 30)
+    # >>> t.clble = t
+    # >>> mb.clble(20)
+    # (10, 20, 3)
+    def __init__(self, obj, *args, **kwargs):
         self._obj = obj
         self._kwargs = kwargs
+        self._args = args
 
     def __getattribute__(self, item):
         original_obj = super(MagicBind, self).__getattribute__('_obj')
@@ -91,10 +96,26 @@ class MagicBind(object):
         return callable_method
 
     def __call__(self, *args, **kwargs):
-        overwrite_dict = (super(MagicBind, self).__getattribute__('_kwargs'))
-        original_callable = super(MagicBind, self).__getattribute__('_clble')
-        ok_args = merge_args(original_callable, overwrite_dict, args)
-        return original_callable(*ok_args, **kwargs)
+        ovw_kwargs = (super(MagicBind, self).__getattribute__('_kwargs'))
+        ovw_args = super(MagicBind, self).__getattribute__('_args')
+        orig_clble = super(MagicBind, self).__getattribute__('_clble')
+        # ok_args = merge_args(orig_clble, ovw_kwargs, args)
+        ok_args, ok_kwargs = (
+            totally_merge_args(orig_clble, ovw_args, ovw_kwargs, args, kwargs))
+        return orig_clble(*ok_args, **ok_kwargs)
+
+def totally_merge_args(callable_, ovw_args, ovw_dict, add_args, add_dict):
+    """Given the callable, return (args, kwargs) to be unpacked when calling it
+    """
+    ok_args=[]
+    ok_kwargs={}
+
+    begin_index = 0 if isinstance(callable_, Func) else 1
+
+    for argname in getargspec(callable_)[0][begin_index:]:
+        if argname in ovw_dict:
+            ok_args
+
 
 
 def merge_args(callable_, overwriting, args):
