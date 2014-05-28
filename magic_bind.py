@@ -38,7 +38,7 @@ class MagicBind(object):
 
     >>> t = Test()
     >>> mb2 = MagicBind(t, 1, 2, 3, x=221, z=5466, b=11111, a='first',d='second', third='thirsd')
-    >>> mb2.six_positional_vargs_kwargs(y=17)
+    >>> mb2.six_positional_vargs_kwargs(118, 118, y=17,  delta='delta')
     (221, 17, 5466, 'first', 111111, 'second', (1, 2, 3), {'third': 'thirsd'})
     """
     # >>> mb = MagicBind(t, x=10)
