@@ -111,9 +111,8 @@ class MagicBind(object):
 def merge_args_better(clble, prio_args, prio_kwargs, add_args, add_kwargs):
     ok_args = []
     ok_kwargs = {}
-    prio_args = list(deepcopy(prio_args))
+    all_args = list(chain(prio_args, add_args))
     prio_kwargs = deepcopy(prio_kwargs)
-    add_args = list(add_args)
 
     begin_index = 0 if isinstance(clble, Func) else 1
 
@@ -122,12 +121,10 @@ def merge_args_better(clble, prio_args, prio_kwargs, add_args, add_kwargs):
             ok_args.append(prio_kwargs.pop(argname))
         elif argname in add_kwargs:
             ok_args.append(add_kwargs.pop(argname))
-        elif prio_args:
-            ok_args.append(prio_args.pop(0))
-        elif add_args:
-            ok_args.append(add_args.pop(0))
+        elif all_args:
+            ok_args.append(all_args.pop(0))
 
-    ok_args.extend(chain(prio_args, add_args))
+    ok_args.extend(all_args)
     if getargspec(clble)[2]:
         # also append prio_dict to transmit MagicBind initial arguments
         # as kws, if the underlying callable doesn't have args with that name
