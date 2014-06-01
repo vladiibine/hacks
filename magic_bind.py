@@ -135,5 +135,4 @@ def merge_args_better(clble, prio_args, prio_kwargs, add_args, add_kwargs):
 
 if __name__ == '__main__':
     import doctest
-
     doctest.testmod()
